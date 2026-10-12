@@ -40,7 +40,7 @@ const Chat = ({ ticketId, currentUserId }) => {
     });
 
     socket.on('display_typing', (data) => {
-      if (data.sender !== currentUserId) {
+      if (String(data.sender) !== String(currentUserId)) {
         setIsTyping(true);
         setTimeout(() => setIsTyping(false), 3000);
       }
@@ -81,36 +81,40 @@ const Chat = ({ ticketId, currentUserId }) => {
     <div className="chat-container">
       <div className="messages-box" style={{ height: '400px', overflowY: 'auto', padding: '10px', background: '#252525', borderRadius: '8px', marginBottom: '10px' }}>
         {messages.map((msg, index) => {
-          const senderId = typeof msg.sender ==='object' && msg.sender != null
-          ? (msg.sender._id ? msg.sender._id.toString() : msg.sender.toString())
-          : msg.sender;
-          const isMe = senderId === currentUserId;
+          const senderId = typeof msg.sender === 'object' && msg.sender != null
+            ? (msg.sender._id ? String(msg.sender._id) : String(msg.sender))
+            : String(msg.sender || '');
+          
+          const isMe = senderId === String(currentUserId);
+
           return (
             <div
               key={index}
               style={{
-                textAlign: isMe ? 'right' : 'left',
-                margin: '8px 0',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: isMe ? 'flex-end' : 'flex-start',
+                margin: '10px 0',
               }}
             >
               <div
                 style={{
-                  display: 'inline-block',
-                  padding: '8px 12px',
-                  borderRadius: '10px',
+                  padding: '10px 14px',
+                  borderRadius: '12px',
                   backgroundColor: isMe ? '#007bff' : '#333',
                   color: '#fff',
                   maxWidth: '70%',
+                  wordBreak: 'break-word',
                 }}
               >
-                <small style={{ display: 'block', fontSize: '10px', opacity: 0.8,}}>
-                  {msg.sender?.name || (isMe ? 'You' : 'Support')}
+                <small style={{ display: 'block', fontSize: '10px', opacity: 0.8, marginBottom: '2px' }}>
+                  {typeof msg.sender === 'object' && msg.sender?.name ? msg.sender.name : (isMe ? 'You' : 'Support')}
                 </small>
-                {msg.message}
-                </div>
-                <small style={{ display: 'block', fontSize: '9px', opacity: 0.7, marginTop: '2px', textAlign: 'right' }}>
-  {msg.createdAt ? new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Just now'}
-</small>
+                {msg.message || msg.text}
+              </div>
+              <small style={{ fontSize: '9px', opacity: 0.7, marginTop: '2px' }}>
+                {msg.createdAt ? new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Just now'}
+              </small>
             </div>
           );
         })}
